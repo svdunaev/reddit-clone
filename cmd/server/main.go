@@ -1,23 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"log/slog"
-	"os"
+	"reddit-clone/internal/application"
 	"reddit-clone/internal/logger"
 
 	"github.com/joho/godotenv"
 )
 
-type App struct {
+type app struct {
 	log *slog.Logger
 }
 
-func NewApp(log *slog.Logger) *App {
-	return &App{log: log}
+func NewApp(log *slog.Logger) *app {
+	return &app{log: log}
 }
 
-func (a *App) Run() {
+func (a *app) Run(ctx context.Context) {
 	a.log.Info("Service running... ")
 }
 
@@ -27,16 +29,14 @@ func main() {
 		fmt.Println("No .env file, using system default values")
 	}
 
-	var level slog.Level
-
-	rawLogLevel := os.Getenv("LOG_LEVEL")
-	if err := level.UnmarshalText([]byte(rawLogLevel)); err != nil {
-		level = slog.LevelInfo
+	cfg, err := application.NewConfig()
+	if err != nil {
+		log.Fatal("invalid config")
 	}
 
-	log := logger.New(level)
+	log := logger.New(cfg.Level)
 
 	app := NewApp(log)
 
-	app.Run()
+	app.Run(context.Background())
 }

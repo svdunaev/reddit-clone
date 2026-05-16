@@ -7,7 +7,8 @@ import (
 
 func New(level slog.Level) *slog.Logger {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: level,
+		Level:     level,
+		AddSource: true,
 	})
 
 	return slog.New(handler)
