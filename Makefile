@@ -6,11 +6,15 @@ help: ## shows available commands
 		| awk 'BEGIN {FS = ":.*##"}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 run: cmd/server/main.go ## builds project and runs the binary file
-	@go build cmd/server/main.go 
-	@./main 
+	@go run cmd/server/main.go 
 
 test: ## runs tests
 	@echo Testing...
 
 lint: ## runs linter
 	@echo Linting...
+
+build: cmd/server/main.go ## builds project
+	@mkdir -p bin
+	@go build -o bin/main cmd/server/main.go
+	@./bin/main
