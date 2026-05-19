@@ -27,23 +27,23 @@ var ErrValidation = errors.New("validation failed")
 func (p *Post) Validate() ([]ValidationError, error) {
 	errors := make([]ValidationError, 0)
 
-	if len(p.Title) <= 3 || len(p.Title) > 200 {
+	if len(p.Title) < 3 || len(p.Title) > 200 {
 		errors = append(errors, ValidationError{
-			Field:  p.Title,
+			Field:  "title",
 			Reason: "title must be at least 3 characters but can not be more than 200",
 		})
 	}
 
 	if len(p.Author) < 1 {
 		errors = append(errors, ValidationError{
-			Field:  p.Author,
+			Field:  "author",
 			Reason: "author can not be empty",
 		})
 	}
 
 	if len(p.Body) < 1 || len(p.Body) > 10000 {
 		errors = append(errors, ValidationError{
-			Field:  p.Body,
+			Field:  "body",
 			Reason: "body must be at least 1 character but can not be more than 10000",
 		})
 	}
@@ -51,7 +51,7 @@ func (p *Post) Validate() ([]ValidationError, error) {
 	_, err := url.ParseRequestURI(p.SubredditName)
 	if err != nil {
 		errors = append(errors, ValidationError{
-			Field:  p.SubredditName,
+			Field:  "subredditName",
 			Reason: "subreddit name is not a valid URL",
 		})
 	}
