@@ -11,3 +11,5 @@ type ValidationError struct {
 }
 
 var ErrValidation = errors.New("validation failed")
+var ErrNotFound = errors.New("post not found")
+var ErrConflict = errors.New("conflig occured")
