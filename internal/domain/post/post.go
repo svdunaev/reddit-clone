@@ -3,10 +3,11 @@ package domain
 import (
 	"net/url"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Post struct {
-	Id            string
 	Author        string
 	Title         string
 	SubredditName string
@@ -14,6 +15,7 @@ type Post struct {
 	Score         int64
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	Id            uuid.UUID
 }
 
 func (p *Post) Validate() ([]ValidationError, error) {
