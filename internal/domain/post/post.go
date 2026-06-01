@@ -8,6 +8,7 @@ import (
 )
 
 type Post struct {
+	Id            uuid.UUID
 	Author        string
 	Title         string
 	SubredditName string
@@ -15,7 +16,6 @@ type Post struct {
 	Score         int64
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
-	Id            uuid.UUID
 }
 
 func (p *Post) Validate() ([]ValidationError, error) {

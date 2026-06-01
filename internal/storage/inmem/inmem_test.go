@@ -32,19 +32,18 @@ func TestCreate(t *testing.T) {
 			wantErr: false,
 		},
 	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClock := mocks.NewMockClock(ctrl)
+	now := time.Now()
+	ctx := context.Background()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockClock := mocks.NewMockClock(ctrl)
-
-			now := time.Now()
-			mockClock.EXPECT().Now().Return(now)
-			mockClock.EXPECT().Now().Return(now)
+			mockClock.EXPECT().Now().Return(now).Times(2)
 
 			s := New(mockClock)
-			got, err := s.Create(context.Background(), tt.input)
+			got, err := s.Create(ctx, tt.input)
 			if tt.wantErr {
 				assert.Error(t, err)
 			}
@@ -81,21 +80,22 @@ func TestList(t *testing.T) {
 		},
 	}
 
+	ctrl := gomock.NewController(t)
+	mockClock := mocks.NewMockClock(ctrl)
+	now := time.Now()
+	ctx := context.Background()
+	s := New(mockClock)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			mockClock := mocks.NewMockClock(ctrl)
-			now := time.Now()
-
 			mockClock.EXPECT().Now().Return(now).Times(len(tt.seedPosts) * 2)
 
-			s := New(mockClock)
 			for _, p := range tt.seedPosts {
-				_, err := s.Create(context.Background(), p)
+				_, err := s.Create(ctx, p)
 				assert.NoError(t, err)
 			}
 
-			got, err := s.List(context.Background())
+			got, err := s.List(ctx)
 
 			assert.NoError(t, err)
 			assert.Len(t, got, tt.wantCount)
@@ -122,37 +122,43 @@ func TestGetById(t *testing.T) {
 		},
 	}
 
+	ctrl := gomock.NewController(t)
+	mockClock := mocks.NewMockClock(ctrl)
+	now := time.Now()
+	s := New(mockClock)
+	ctx := context.Background()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			mockClock := mocks.NewMockClock(ctrl)
-			now := time.Now()
 
 			if !tt.wantErr {
-				mockClock.EXPECT().Now().Return(now)
-				mockClock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now).Times(2)
 			}
-
-			s := New(mockClock)
 
 			var createdId uuid.UUID
 			if !tt.wantErr {
-				created, err := s.Create(context.Background(), tt.input)
+				created, err := s.Create(ctx, tt.input)
 				assert.NoError(t, err)
 				createdId = created.Id
 			}
 
-			post, err := s.GetById(context.Background(), createdId)
+			createdPost := domain.Post{
+				Id:        createdId,
+				Author:    tt.input.Author,
+				Title:     tt.input.Title,
+				Body:      tt.input.Body,
+				CreatedAt: now,
+				UpdatedAt: now,
+			}
+
+			post, err := s.GetById(ctx, createdId)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
 			}
 
 			assert.NoError(t, err)
-			assert.Equal(t, createdId, post.Id)
-			assert.Equal(t, tt.input.Title, post.Title)
-			assert.Equal(t, tt.input.Author, post.Author)
-			assert.Equal(t, tt.input.Body, post.Body)
+			assert.Equal(t, createdPost, post)
 		})
 	}
 }
@@ -176,27 +182,27 @@ func TestDelete(t *testing.T) {
 		},
 	}
 
+	ctrl := gomock.NewController(t)
+	mockClock := mocks.NewMockClock(ctrl)
+	now := time.Now()
+	s := New(mockClock)
+	ctx := context.Background()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			mockClock := mocks.NewMockClock(ctrl)
-			now := time.Now()
 
 			if !tt.wantErr {
-				mockClock.EXPECT().Now().Return(now)
-				mockClock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now).Times(2)
 			}
-
-			s := New(mockClock)
 
 			var createdId uuid.UUID
 			if !tt.wantErr {
-				created, err := s.Create(context.Background(), tt.input)
+				created, err := s.Create(ctx, tt.input)
 				assert.NoError(t, err)
 				createdId = created.Id
 			}
 
-			err := s.Delete(context.Background(), tt.deleteId(createdId))
+			err := s.Delete(ctx, tt.deleteId(createdId))
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -204,7 +210,7 @@ func TestDelete(t *testing.T) {
 			}
 
 			assert.NoError(t, err)
-			_, getErr := s.GetById(context.Background(), createdId)
+			_, getErr := s.GetById(ctx, createdId)
 			assert.Error(t, getErr)
 		})
 	}
@@ -279,28 +285,27 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 
+	ctrl := gomock.NewController(t)
+	mockClock := mocks.NewMockClock(ctrl)
+	now := time.Now()
+	s := New(mockClock)
+	ctx := context.Background()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			mockClock := mocks.NewMockClock(ctrl)
-			now := time.Now()
 
 			if !tt.wantErr {
-				mockClock.EXPECT().Now().Return(now)
-				mockClock.EXPECT().Now().Return(now)
-				mockClock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now).Times(3)
 			}
-
-			s := New(mockClock)
 
 			var createdId uuid.UUID
 			if !tt.wantErr {
-				created, err := s.Create(context.Background(), tt.initialPost)
+				created, err := s.Create(ctx, tt.initialPost)
 				assert.NoError(t, err)
 				createdId = created.Id
 			}
 
-			post, err := s.Update(context.Background(), tt.updateId(createdId), tt.updatePayload)
+			post, err := s.Update(ctx, tt.updateId(createdId), tt.updatePayload)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -320,9 +325,9 @@ func TestStore_Concurrent(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClock := mocks.NewMockClock(ctrl)
 	mockClock.EXPECT().Now().Return(time.Now()).AnyTimes()
-
 	s := New(mockClock)
 	goroutines := 10
+
 	var wg sync.WaitGroup
 
 	// Create
