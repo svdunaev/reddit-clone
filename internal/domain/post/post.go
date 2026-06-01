@@ -3,10 +3,12 @@ package domain
 import (
 	"net/url"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Post struct {
-	Id            string
+	Id            uuid.UUID
 	Author        string
 	Title         string
 	SubredditName string
