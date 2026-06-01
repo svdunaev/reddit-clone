@@ -333,7 +333,6 @@ func TestStore_Concurrent(t *testing.T) {
 	// Create
 	createdPosts := make([]domain.Post, goroutines)
 	createdIds := make([]uuid.UUID, goroutines)
-	var mu sync.Mutex
 
 	wg.Add(goroutines)
 	for i := 0; i < goroutines; i++ {
@@ -345,9 +344,7 @@ func TestStore_Concurrent(t *testing.T) {
 				Body:   fmt.Sprintf("test-body-%d", i),
 			})
 			assert.NoError(t, err)
-			mu.Lock()
 			createdPosts[i] = post
-			mu.Unlock()
 		}(i)
 	}
 
