@@ -8,6 +8,8 @@ require k8s.io/utils v0.0.0-20260507154919-ff6756f316d2
 
 require go.uber.org/mock v0.6.0
 
+require github.com/go-chi/chi/v5 v5.3.0
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/uuid v1.6.0

@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	Level slog.Level
+	Level    slog.Level
+	HttpAddr string
 }
 
 func NewConfig() (*Config, error) {
@@ -17,7 +18,10 @@ func NewConfig() (*Config, error) {
 		level = slog.LevelInfo
 	}
 
+	httpAddr := os.Getenv("HTTP_ADDR")
+
 	return &Config{
-		Level: level,
+		Level:    level,
+		HttpAddr: httpAddr,
 	}, nil
 }

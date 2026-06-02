@@ -6,9 +6,12 @@ import (
 	"log"
 	"log/slog"
 	"reddit-clone/internal/application"
+	server "reddit-clone/internal/http"
 	"reddit-clone/internal/logger"
+	"reddit-clone/internal/storage/inmem"
 
 	"github.com/joho/godotenv"
+	"k8s.io/utils/clock"
 )
 
 type app struct {
@@ -39,4 +42,10 @@ func main() {
 	app := NewApp(log)
 
 	app.Run(context.Background())
+
+	repo := inmem.New(clock.RealClock{})
+
+	srv := server.New(log, repo)
+
+	srv.Start(cfg.HttpAddr)
 }
