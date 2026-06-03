@@ -3,6 +3,7 @@ package server
 import (
 	"log/slog"
 	"net/http"
+	"reddit-clone/internal/handler"
 	"reddit-clone/internal/service/posts"
 	"time"
 
@@ -35,7 +36,10 @@ func New(logger *slog.Logger, repo posts.PostRepository) *Server {
 }
 
 func (s *Server) routes() {
+	h := handler.NewHandler(s.repo)
 	s.router.Get("/health", s.health)
+	s.router.Post("/api/posts", h.HandleCreatePost)
+	s.router.Get("/api/posts/{id}", h.HandleGetPost)
 }
 
 func (s *Server) Start(addr string) {

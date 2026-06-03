@@ -69,7 +69,7 @@ func (s *store) GetById(ctx context.Context, id uuid.UUID) (domain.Post, error) 
 
 	post, ok := s.posts[id]
 	if !ok {
-		return domain.Post{}, fmt.Errorf("post with id %d does not exist", id)
+		return domain.Post{}, domain.ErrNotFound
 	}
 
 	return *post, nil
