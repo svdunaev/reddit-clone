@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"reddit-clone/internal/handler"
-	"reddit-clone/internal/service/posts"
+	"reddit-clone/internal/storage/inmem"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -14,10 +14,10 @@ import (
 type Server struct {
 	router *chi.Mux
 	logger *slog.Logger
-	repo   posts.PostRepository
+	repo   *inmem.Store
 }
 
-func New(logger *slog.Logger, repo posts.PostRepository) *Server {
+func New(logger *slog.Logger, repo *inmem.Store) *Server {
 	r := chi.NewMux()
 
 	r.Use(middleware.RequestID)

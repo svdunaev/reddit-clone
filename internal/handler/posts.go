@@ -6,17 +6,16 @@ import (
 	"net/http"
 	domain "reddit-clone/internal/domain/post"
 	"reddit-clone/internal/helpers"
-	"reddit-clone/internal/service/posts"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
 type Handler struct {
-	repo posts.PostRepository
+	repo PostRepository
 }
 
-func NewHandler(repo posts.PostRepository) *Handler {
+func NewHandler(repo PostRepository) *Handler {
 	return &Handler{
 		repo: repo,
 	}
