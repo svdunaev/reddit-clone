@@ -9,7 +9,6 @@ import (
 	"reddit-clone/internal/mocks"
 	"reddit-clone/internal/storage/inmem"
 	"testing"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -26,12 +25,12 @@ func TestHappyCreateHandler(t *testing.T) {
 	}
 
 	ctrl := gomock.NewController(t)
-	mockClock := mocks.NewMockClock(ctrl)
-	s := inmem.New(mockClock)
-	now := time.Now()
-	mockClock.EXPECT().Now().Return(now).Times(2)
-
+	s := NewMockPostRepository(ctrl)
 	h := NewHandler(s)
+
+	s.EXPECT().
+		Create(gomock.Any(), post).
+		Return(post, nil)
 
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(post)
@@ -49,11 +48,7 @@ func TestHappyCreateHandler(t *testing.T) {
 	err = json.NewDecoder(rr.Body).Decode(&resp)
 
 	assert.NoError(t, err)
-
-	assert.Equal(t, post.Author, resp.Author)
-	assert.Equal(t, post.Title, resp.Title)
-	assert.Equal(t, post.Body, resp.Body)
-	assert.Equal(t, post.SubredditName, resp.SubredditName)
+	assert.Equal(t, post, resp)
 }
 
 func TestValidationErrCreateHandler(t *testing.T) {

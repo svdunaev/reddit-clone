@@ -13,7 +13,7 @@ import (
 )
 
 type Handler struct {
-	repo posts.PostRepository
+	repo PostRepository
 }
 
 func NewHandler(repo posts.PostRepository) *Handler {
