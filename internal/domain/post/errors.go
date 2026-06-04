@@ -6,8 +6,8 @@ type PostValidationErrorField = string
 type PostValidationErrorReason = string
 
 type ValidationError struct {
-	Field  PostValidationErrorField
-	Reason PostValidationErrorReason
+	Field  PostValidationErrorField  `json:"field"`
+	Reason PostValidationErrorReason `json:"reason"`
 }
 
 var ErrValidation = errors.New("validation failed")

@@ -3,7 +3,10 @@ package server
 import (
 	"log/slog"
 	"net/http"
-	"reddit-clone/internal/service/posts"
+	createHandler "reddit-clone/internal/handler/create"
+	getByIdHandler "reddit-clone/internal/handler/get_by_id"
+	"reddit-clone/internal/helpers/middlewares"
+	"reddit-clone/internal/storage/inmem"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -13,14 +16,15 @@ import (
 type Server struct {
 	router *chi.Mux
 	logger *slog.Logger
-	repo   posts.PostRepository
+	repo   *inmem.Store
 }
 
-func New(logger *slog.Logger, repo posts.PostRepository) *Server {
+func New(logger *slog.Logger, repo *inmem.Store) *Server {
 	r := chi.NewMux()
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
+	r.Use(middlewares.JSONHeaderMiddleware)
 
 	s := &Server{
 		router: r,
@@ -36,6 +40,8 @@ func New(logger *slog.Logger, repo posts.PostRepository) *Server {
 
 func (s *Server) routes() {
 	s.router.Get("/health", s.health)
+	s.router.Post("/api/posts", createHandler.NewHandler(s.repo).HandleCreatePost)
+	s.router.Get("/api/posts/{id}", getByIdHandler.NewHandler(s.repo).HandleGetPost)
 }
 
 func (s *Server) Start(addr string) {

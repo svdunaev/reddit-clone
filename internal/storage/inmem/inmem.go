@@ -11,21 +11,21 @@ import (
 	"k8s.io/utils/clock"
 )
 
-type store struct {
+type Store struct {
 	mu     sync.RWMutex
 	posts  map[uuid.UUID]*domain.Post
 	nextId int64
 	clock  clock.Clock
 }
 
-func New(clock clock.Clock) *store {
-	return &store{
+func New(clock clock.Clock) *Store {
+	return &Store{
 		posts: make(map[uuid.UUID]*domain.Post),
 		clock: clock,
 	}
 }
 
-func (s *store) Create(ctx context.Context, input domain.Post) (domain.Post, error) {
+func (s *Store) Create(ctx context.Context, input domain.Post) (domain.Post, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -42,7 +42,7 @@ func (s *store) Create(ctx context.Context, input domain.Post) (domain.Post, err
 	return *s.posts[input.Id], nil
 }
 
-func (s *store) List(ctx context.Context) ([]domain.Post, error) {
+func (s *Store) List(ctx context.Context) ([]domain.Post, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -59,7 +59,7 @@ func (s *store) List(ctx context.Context) ([]domain.Post, error) {
 	return res, nil
 }
 
-func (s *store) GetById(ctx context.Context, id uuid.UUID) (domain.Post, error) {
+func (s *Store) GetById(ctx context.Context, id uuid.UUID) (domain.Post, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -69,13 +69,13 @@ func (s *store) GetById(ctx context.Context, id uuid.UUID) (domain.Post, error) 
 
 	post, ok := s.posts[id]
 	if !ok {
-		return domain.Post{}, fmt.Errorf("post with id %d does not exist", id)
+		return domain.Post{}, domain.ErrNotFound
 	}
 
 	return *post, nil
 }
 
-func (s *store) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -93,7 +93,7 @@ func (s *store) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (s *store) Update(ctx context.Context, id uuid.UUID, input domain.Post) (domain.Post, error) {
+func (s *Store) Update(ctx context.Context, id uuid.UUID, input domain.Post) (domain.Post, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
