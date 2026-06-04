@@ -4,7 +4,10 @@ import (
 	"log/slog"
 	"net/http"
 	createHandler "reddit-clone/internal/handler/create"
+	deletePostHandler "reddit-clone/internal/handler/delete"
 	getByIdHandler "reddit-clone/internal/handler/get_by_id"
+	getListHandler "reddit-clone/internal/handler/list"
+	updatePostHandler "reddit-clone/internal/handler/update"
 	"reddit-clone/internal/helpers/middlewares"
 	"reddit-clone/internal/storage/inmem"
 	"time"
@@ -42,6 +45,9 @@ func (s *Server) routes() {
 	s.router.Get("/health", s.health)
 	s.router.Post("/api/posts", createHandler.NewHandler(s.repo).HandleCreatePost)
 	s.router.Get("/api/posts/{id}", getByIdHandler.NewHandler(s.repo).HandleGetPost)
+	s.router.Get("/api/posts", getListHandler.NewHandler(s.repo).HandleGetList)
+	s.router.Delete("/api/posts/{id}", deletePostHandler.NewHandler(s.repo).HandleDeletePost)
+	s.router.Put("/api/posts/{id}", updatePostHandler.NewHandler(s.repo).HandleUpdatePost)
 }
 
 func (s *Server) Start(addr string) {
