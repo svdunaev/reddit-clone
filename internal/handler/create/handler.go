@@ -31,9 +31,7 @@ func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 
 	if errs, err := post.Validate(); err != nil {
 		if errors.Is(err, domain.ErrValidation) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			utils.WriteError(w, http.StatusBadRequest, "validation_error", "validation error", errs)
+			utils.WriteError(w, http.StatusBadRequest, "validation_error", err.Error(), errs)
 			return
 		}
 	}
