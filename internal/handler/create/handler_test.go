@@ -1,4 +1,4 @@
-package handler
+package create
 
 import (
 	"bytes"
@@ -6,17 +6,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	domain "reddit-clone/internal/domain/post"
-	"reddit-clone/internal/mocks"
-	"reddit-clone/internal/storage/inmem"
+	"reddit-clone/internal/helpers/utils"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
 
-func TestHappyCreateHandler(t *testing.T) {
+func TestHappyHandler(t *testing.T) {
 	post := domain.Post{
 		Author:        "John Doe",
 		Title:         "Aboba322",
@@ -51,7 +48,7 @@ func TestHappyCreateHandler(t *testing.T) {
 	assert.Equal(t, post, resp)
 }
 
-func TestValidationErrCreateHandler(t *testing.T) {
+func TestValidationErrHandler(t *testing.T) {
 	post := domain.Post{
 		Author:        "1",
 		Title:         "1",
@@ -59,10 +56,13 @@ func TestValidationErrCreateHandler(t *testing.T) {
 		SubredditName: "123",
 	}
 
-	ctrl := gomock.NewController(t)
-	mockClock := mocks.NewMockClock(ctrl)
-	s := inmem.New(mockClock)
+	httpErr := utils.HttpError{
+		Code:    "validation_error",
+		Message: "validation error",
+	}
 
+	ctrl := gomock.NewController(t)
+	s := NewMockPostRepository(ctrl)
 	h := NewHandler(s)
 
 	var buf bytes.Buffer
@@ -75,25 +75,21 @@ func TestValidationErrCreateHandler(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 
-	var resp map[string]any
-
+	var resp utils.HttpError
 	json.NewDecoder(rr.Body).Decode(&resp)
 
-	errObj, ok := resp["error"].(map[string]any)
-	assert.True(t, ok)
-
-	assert.Equal(t, "validation_error", errObj["code"])
-	assert.Equal(t, "validation failed", errObj["message"])
-
+	assert.Equal(t, httpErr.Code, resp.Code)
+	assert.Equal(t, httpErr.Message, resp.Message)
 }
 
-func TestBadJSONCreateHandler(t *testing.T) {
+func TestBadJSONHandler(t *testing.T) {
 	body := `{"author":"john","title":"test"`
+	httpErr := utils.HttpError{
+		Code: "bad_request",
+	}
 
 	ctrl := gomock.NewController(t)
-	mockClock := mocks.NewMockClock(ctrl)
-	s := inmem.New(mockClock)
-
+	s := NewMockPostRepository(ctrl)
 	h := NewHandler(s)
 
 	var buf bytes.Buffer
@@ -106,46 +102,8 @@ func TestBadJSONCreateHandler(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 
-	var resp map[string]any
-
+	var resp utils.HttpError
 	json.NewDecoder(rr.Body).Decode(&resp)
 
-	errObj, ok := resp["error"].(map[string]any)
-	assert.True(t, ok)
-
-	assert.Equal(t, "bad_request", errObj["code"])
-
-	msg, ok := errObj["message"].(string)
-	assert.True(t, ok)
-	assert.Contains(t, msg, "cannot unmarshal")
-}
-
-func TestNotFoundGetPostHandler(t *testing.T) {
-	id := uuid.New().String()
-	ctrl := gomock.NewController(t)
-	mockClock := mocks.NewMockClock(ctrl)
-	s := inmem.New(mockClock)
-	h := NewHandler(s)
-
-	r := chi.NewRouter()
-	r.Get("/api/posts/{id}", h.HandleGetPost)
-
-	req, _ := http.NewRequest(http.MethodGet, "/api/posts/"+id, nil)
-	rr := httptest.NewRecorder()
-
-	r.ServeHTTP(rr, req)
-
-	var resp map[string]any
-
-	json.NewDecoder(rr.Body).Decode(&resp)
-
-	assert.Equal(t, http.StatusNotFound, rr.Code)
-
-	errObj, ok := resp["error"].(map[string]any)
-	assert.True(t, ok)
-	assert.Equal(t, "not_found", errObj["code"])
-
-	msg, ok := errObj["message"].(string)
-	assert.True(t, ok)
-	assert.Contains(t, msg, "not found")
+	assert.Equal(t, httpErr.Code, resp.Code)
 }

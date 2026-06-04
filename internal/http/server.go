@@ -3,7 +3,9 @@ package server
 import (
 	"log/slog"
 	"net/http"
-	"reddit-clone/internal/handler"
+	createHandler "reddit-clone/internal/handler/create"
+	getByIdHandler "reddit-clone/internal/handler/get_by_id"
+	"reddit-clone/internal/helpers/middlewares"
 	"reddit-clone/internal/storage/inmem"
 	"time"
 
@@ -22,6 +24,7 @@ func New(logger *slog.Logger, repo *inmem.Store) *Server {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
+	r.Use(middlewares.JSONHeaderMiddleware)
 
 	s := &Server{
 		router: r,
@@ -36,10 +39,9 @@ func New(logger *slog.Logger, repo *inmem.Store) *Server {
 }
 
 func (s *Server) routes() {
-	h := handler.NewHandler(s.repo)
 	s.router.Get("/health", s.health)
-	s.router.Post("/api/posts", h.HandleCreatePost)
-	s.router.Get("/api/posts/{id}", h.HandleGetPost)
+	s.router.Post("/api/posts", createHandler.NewHandler(s.repo).HandleCreatePost)
+	s.router.Get("/api/posts/{id}", getByIdHandler.NewHandler(s.repo).HandleGetPost)
 }
 
 func (s *Server) Start(addr string) {
