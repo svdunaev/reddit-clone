@@ -7,7 +7,7 @@ import (
 
 type Config struct {
 	Level    slog.Level
-	HttpAddr string
+	HTTPAddr string
 }
 
 func NewConfig() (*Config, error) {
@@ -22,6 +22,6 @@ func NewConfig() (*Config, error) {
 
 	return &Config{
 		Level:    level,
-		HttpAddr: httpAddr,
+		HTTPAddr: httpAddr,
 	}, nil
 }

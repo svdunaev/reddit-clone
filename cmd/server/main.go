@@ -22,7 +22,7 @@ func NewApp(log *slog.Logger) *app {
 	return &app{log: log}
 }
 
-func (a *app) Run(ctx context.Context) {
+func (a *app) Run(_ context.Context) {
 	a.log.Info("Service running... ")
 }
 
@@ -47,5 +47,5 @@ func main() {
 
 	srv := server.New(log, repo)
 
-	srv.Start(cfg.HttpAddr)
+	srv.Start(cfg.HTTPAddr)
 }
