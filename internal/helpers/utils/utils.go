@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -20,5 +21,8 @@ func WriteError(w http.ResponseWriter, status int, code, msg string, details any
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(httpError)
+	err := json.NewEncoder(w).Encode(httpError)
+	if err != nil {
+		log.Panic(err)
+	}
 }

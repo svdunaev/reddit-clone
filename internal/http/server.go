@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"log/slog"
 	"net/http"
 	createHandler "reddit-clone/internal/handler/create"
@@ -51,7 +52,10 @@ func (s *Server) routes() {
 }
 
 func (s *Server) Start(addr string) {
-	http.ListenAndServe(addr, s.router)
+	err := http.ListenAndServe(addr, s.router)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {

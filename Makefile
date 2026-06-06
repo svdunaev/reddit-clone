@@ -5,6 +5,9 @@
 MOCKGEN   ?= go run go.uber.org/mock/mockgen
 MOCKS_DIR := internal/mocks
 MOCK_PKG  := mocks
+
+GOLANGCI_LINT_VERSION := v2.12.0
+
 # Third-party interfaces mocked in program (reflect) mode: "import/path:Interface".
 # These live outside the project so they can't be auto-discovered from source.
 EXTERNAL_MOCKS := k8s.io/utils/clock:Clock
@@ -20,8 +23,14 @@ run: cmd/server/main.go ## builds project and runs the binary file
 test: ## runs tests
 	@echo Testing...
 
+
+.PHONY: lint install-tools
+ 
+install-tools:
+	@go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+
 lint: ## runs linter
-	@echo Linting...
+	golangci-lint run ./...
 
 build: cmd/server/main.go ## builds project
 	@mkdir -p bin
