@@ -8,14 +8,23 @@ import (
 )
 
 type Post struct {
-	Id            uuid.UUID `json:"id,omitempty"`
-	Author        string    `json:"author"`
-	Title         string    `json:"title"`
-	SubredditName string    `json:"subreddit_name"`
-	Body          string    `json:"body"`
-	Score         int64     `json:"score,omitempty"`
-	CreatedAt     time.Time `json:"created_at,omitempty"`
-	UpdatedAt     time.Time `json:"updated_at,omitempty"`
+	Id            uuid.UUID
+	Author        string
+	Title         string
+	Body          string
+	SubredditName string
+	Score         int64
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+func NewPost(author, title, body, subredditName string) *Post {
+	return &Post{
+		Author:        author,
+		Title:         title,
+		Body:          body,
+		SubredditName: subredditName,
+	}
 }
 
 func (p *Post) Validate() ([]ValidationError, error) {

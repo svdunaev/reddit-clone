@@ -1,20 +1,28 @@
-package create
+package create_post
 
 import (
 	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	createPostCommand "reddit-clone/internal/application/command/create_post"
 	domain "reddit-clone/internal/domain/post"
 	"reddit-clone/internal/helpers/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 func TestHappyHandler(t *testing.T) {
-	post := domain.Post{
+	post := &domain.Post{
+		Author:        "John Doe",
+		Title:         "Aboba322",
+		Body:          "ya ochen lublu testi",
+		SubredditName: "https://pkg.go.dev/testing#B.Helper",
+	}
+
+	inputCommand := createPostCommand.Command{
 		Author:        "John Doe",
 		Title:         "Aboba322",
 		Body:          "ya ochen lublu testi",
@@ -22,21 +30,24 @@ func TestHappyHandler(t *testing.T) {
 	}
 
 	ctrl := gomock.NewController(t)
-	s := NewMockPostRepository(ctrl)
-	h := NewHandler(s)
+	cmd := NewMockCreateCommand(ctrl)
+	handler := NewHandler(cmd)
 
-	s.EXPECT().
-		Create(gomock.Any(), post).
-		Return(post, nil)
+	cmd.EXPECT().Handle(gomock.Any(), inputCommand).Return(post, nil)
 
 	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(post)
+	err := json.NewEncoder(&buf).Encode(Request{
+		Author:        "John Doe",
+		Title:         "Aboba322",
+		Body:          "ya ochen lublu testi",
+		SubredditName: "https://pkg.go.dev/testing#B.Helper",
+	})
 	req, err := http.NewRequest(http.MethodPost, "/api/posts", &buf)
 	assert.NoError(t, err)
 
 	rr := httptest.NewRecorder()
 
-	h.HandleCreatePost(rr, req)
+	handler.HandleCreatePost(rr, req)
 
 	assert.Equal(t, http.StatusCreated, rr.Code)
 
@@ -45,41 +56,7 @@ func TestHappyHandler(t *testing.T) {
 	err = json.NewDecoder(rr.Body).Decode(&resp)
 
 	assert.NoError(t, err)
-	assert.Equal(t, post, resp)
-}
-
-func TestValidationErrHandler(t *testing.T) {
-	post := domain.Post{
-		Author:        "1",
-		Title:         "1",
-		Body:          "",
-		SubredditName: "123",
-	}
-
-	httpErr := utils.HttpError{
-		Code:    "validation_error",
-		Message: "validation error",
-	}
-
-	ctrl := gomock.NewController(t)
-	s := NewMockPostRepository(ctrl)
-	h := NewHandler(s)
-
-	var buf bytes.Buffer
-	json.NewEncoder(&buf).Encode(post)
-	req, _ := http.NewRequest(http.MethodPost, "/api/posts", &buf)
-
-	rr := httptest.NewRecorder()
-
-	h.HandleCreatePost(rr, req)
-
-	assert.Equal(t, http.StatusBadRequest, rr.Code)
-
-	var resp utils.HttpError
-	json.NewDecoder(rr.Body).Decode(&resp)
-
-	assert.Equal(t, httpErr.Code, resp.Code)
-	assert.Equal(t, httpErr.Message, resp.Message)
+	assert.Equal(t, *post, resp)
 }
 
 func TestBadJSONHandler(t *testing.T) {
@@ -89,8 +66,8 @@ func TestBadJSONHandler(t *testing.T) {
 	}
 
 	ctrl := gomock.NewController(t)
-	s := NewMockPostRepository(ctrl)
-	h := NewHandler(s)
+	cmd := NewMockCreateCommand(ctrl)
+	handler := NewHandler(cmd)
 
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(body)
@@ -98,7 +75,7 @@ func TestBadJSONHandler(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	h.HandleCreatePost(rr, req)
+	handler.HandleCreatePost(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 

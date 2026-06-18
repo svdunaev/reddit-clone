@@ -1,20 +1,26 @@
-package create
+package create_post
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
-	domain "reddit-clone/internal/domain/post"
+	"reddit-clone/internal/application/command/create_post"
 	"reddit-clone/internal/helpers/utils"
 )
 
-type Handler struct {
-	repo PostRepository
+type Request struct {
+	Author        string `json:"author"`
+	Title         string `json:"title"`
+	Body          string `json:"body"`
+	SubredditName string `json:"subreddit_name"`
 }
 
-func NewHandler(repo PostRepository) *Handler {
+type Handler struct {
+	cmd CreateCommand
+}
+
+func NewHandler(cmd CreateCommand) *Handler {
 	return &Handler{
-		repo: repo,
+		cmd: cmd,
 	}
 }
 
@@ -22,21 +28,21 @@ func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var post domain.Post
+	var payload Request
 
-	if err := decoder.Decode(&post); err != nil {
+	if err := decoder.Decode(&payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, "bad_request", err.Error(), nil)
 		return
 	}
 
-	if errs, err := post.Validate(); err != nil {
-		if errors.Is(err, domain.ErrValidation) {
-			utils.WriteError(w, http.StatusBadRequest, "validation_error", err.Error(), errs)
-			return
-		}
+	cmd := create_post.Command{
+		Author:        payload.Author,
+		Title:         payload.Title,
+		Body:          payload.Body,
+		SubredditName: payload.SubredditName,
 	}
 
-	createdPost, err := h.repo.Create(r.Context(), post)
+	createdPost, err := h.cmd.Handle(r.Context(), cmd)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, "creation_failed", err.Error(), nil)
 		return

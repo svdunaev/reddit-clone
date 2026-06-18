@@ -6,23 +6,33 @@ import (
 	"log"
 	"log/slog"
 	"reddit-clone/internal/application"
-	server "reddit-clone/internal/http"
+	createPostCommand "reddit-clone/internal/application/command/create_post"
 	"reddit-clone/internal/logger"
 	"reddit-clone/internal/storage/inmem"
+	server "reddit-clone/internal/transport/http"
+	createPostHTTP "reddit-clone/internal/transport/http/create_post"
 
 	"github.com/joho/godotenv"
 	"k8s.io/utils/clock"
 )
 
-type app struct {
-	log *slog.Logger
+type App struct {
+	log                      *slog.Logger
+	repo                     *inmem.Store
+	createPostHandlerHTTP    *createPostHTTP.Handler
+	createPostCommandHandler *createPostCommand.Handler
 }
 
-func NewApp(log *slog.Logger) *app {
-	return &app{log: log}
+func NewApp(log *slog.Logger) *App {
+	repo := inmem.New(clock.RealClock{})
+
+	createPostCommand := createPostCommand.NewHandler(repo)
+	createPostHTTP := createPostHTTP.NewHandler(createPostCommand)
+
+	return &App{log: log, repo: repo, createPostHandlerHTTP: createPostHTTP, createPostCommandHandler: createPostCommand}
 }
 
-func (a *app) Run(_ context.Context) {
+func (a *App) Run(_ context.Context) {
 	a.log.Info("Service running... ")
 }
 
@@ -41,11 +51,8 @@ func main() {
 
 	app := NewApp(log)
 
+	srv := server.New(log, app.createPostHandlerHTTP)
 	app.Run(context.Background())
-
-	repo := inmem.New(clock.RealClock{})
-
-	srv := server.New(log, repo)
 
 	srv.Start(cfg.HTTPAddr)
 }
