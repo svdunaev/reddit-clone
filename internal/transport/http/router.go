@@ -1,11 +1,13 @@
-package http
+package httptransport
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"net/http"
 	"reddit-clone/internal/helpers/middlewares"
 	createPostHTTP "reddit-clone/internal/transport/http/create_post"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -54,4 +56,20 @@ func (s *Server) routes(createHandler *createPostHTTP.Handler) {
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func (r *Server) Run(ctx context.Context, addr string) error {
+	srv := &http.Server{Addr: addr, Handler: r.router, ReadHeaderTimeout: 5 * time.Second}
+	errCh := make(chan error, 1)
+	go func() { errCh <- srv.ListenAndServe() }()
+	r.logger.Info("http listening", "addr", addr)
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		return srv.Shutdown(shutdownCtx)
+	}
 }

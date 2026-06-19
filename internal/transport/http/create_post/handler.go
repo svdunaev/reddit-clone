@@ -2,9 +2,11 @@ package create_post
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"reddit-clone/internal/application/command/create_post"
-	"reddit-clone/internal/helpers/utils"
+	domain "reddit-clone/internal/domain/post"
+	"reddit-clone/internal/transport/http/respond"
 )
 
 type Request struct {
@@ -15,10 +17,10 @@ type Request struct {
 }
 
 type Handler struct {
-	cmd CreateCommand
+	cmd CreatePostCommandHandler
 }
 
-func NewHandler(cmd CreateCommand) *Handler {
+func NewHandler(cmd CreatePostCommandHandler) *Handler {
 	return &Handler{
 		cmd: cmd,
 	}
@@ -31,7 +33,7 @@ func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 	var payload Request
 
 	if err := decoder.Decode(&payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, "bad_request", err.Error(), nil)
+		respond.Error(w, http.StatusBadRequest, "bad_request", "invalid JSON "+err.Error())
 		return
 	}
 
@@ -42,17 +44,18 @@ func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 		SubredditName: payload.SubredditName,
 	}
 
-	createdPost, err := h.cmd.Handle(r.Context(), cmd)
+	result, err := h.cmd.Handle(r.Context(), cmd)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, "creation_failed", err.Error(), nil)
+		if errors.Is(err, domain.ErrValidation) {
+			response := respond.ToResponse(result)
+			respond.JSON(w, http.StatusBadRequest, response)
+			return
+		}
+		respond.Error(w, http.StatusInternalServerError, "internal_error", err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	response := respond.ToResponse(result)
 
-	if err := json.NewEncoder(w).Encode(createdPost); err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, "internal_error", err.Error(), nil)
-		return
-	}
+	respond.JSON(w, http.StatusCreated, response)
 }

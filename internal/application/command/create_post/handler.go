@@ -3,9 +3,7 @@ package create_post
 import (
 	"context"
 	"errors"
-	"fmt"
 	domain "reddit-clone/internal/domain/post"
-	"strings"
 )
 
 type Command struct {
@@ -13,6 +11,16 @@ type Command struct {
 	Body          string
 	Author        string
 	SubredditName string
+}
+
+type ErrorDetails struct {
+	Code    string
+	Details []domain.ValidationError
+}
+
+type Result struct {
+	Post   *domain.Post
+	Errors *ErrorDetails
 }
 
 type Handler struct {
@@ -25,25 +33,36 @@ func NewHandler(repo PostRepository) *Handler {
 	}
 }
 
-func (h *Handler) Handle(ctx context.Context, cmd Command) (*domain.Post, error) {
+func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	input := domain.NewPost(cmd.Author, cmd.Title, cmd.Body, cmd.SubredditName)
 
 	if errs, err := input.Validate(); err != nil {
 		if errors.Is(err, domain.ErrValidation) {
-			messages := make([]string, len(errs))
-			for i, e := range errs {
-				messages[i] = fmt.Sprintf("%s: %s", e.Field, e.Reason)
-			}
-			return &domain.Post{}, fmt.Errorf("%w: %v", domain.ErrValidation, strings.Join(messages, ": "))
+			return Result{
+				Post: nil,
+				Errors: &ErrorDetails{
+					Code:    ValidationErrorCode,
+					Details: errs,
+				},
+			}, err
 		}
 
-		return &domain.Post{}, err
+		return Result{
+			Post:   nil,
+			Errors: nil,
+		}, err
 	}
 
 	post, err := h.repo.Create(ctx, *input)
 	if err != nil {
-		return &domain.Post{}, err
+		return Result{
+			Post:   nil,
+			Errors: nil,
+		}, err
 	}
 
-	return &post, nil
+	return Result{
+		Post:   &post,
+		Errors: nil,
+	}, nil
 }

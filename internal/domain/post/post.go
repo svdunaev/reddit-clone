@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"net/url"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,11 +50,10 @@ func (p *Post) Validate() ([]ValidationError, error) {
 		})
 	}
 
-	_, err := url.ParseRequestURI(p.SubredditName)
-	if err != nil {
+	if len(p.SubredditName) == 0 {
 		errors = append(errors, ValidationError{
 			Field:  "subredditName",
-			Reason: "subreddit name is not a valid URL",
+			Reason: "subreddit name can not be empty",
 		})
 	}
 

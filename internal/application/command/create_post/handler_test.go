@@ -30,9 +30,9 @@ func TestHappyHandler(t *testing.T) {
 
 	repo.EXPECT().Create(gomock.Any(), expectedPost).Return(expectedPost, nil)
 
-	post, err := handler.Handle(context.Background(), cmd)
+	result, err := handler.Handle(context.Background(), cmd)
 	assert.NoError(t, err)
-	assert.Equal(t, expectedPost, *post)
+	assert.Equal(t, expectedPost, *result.Post)
 }
 
 func TestValidationErrHandler(t *testing.T) {
@@ -40,14 +40,35 @@ func TestValidationErrHandler(t *testing.T) {
 		Author:        "",
 		Title:         "",
 		Body:          "",
-		SubredditName: "da",
+		SubredditName: "",
+	}
+
+	expectedErrors := []domain.ValidationError{
+		{
+			Field:  "title",
+			Reason: "title must be at least 3 characters but can not be more than 200",
+		},
+		{
+			Field:  "author",
+			Reason: "author can not be empty",
+		},
+		{
+			Field:  "body",
+			Reason: "body must be at least 1 character but can not be more than 10000",
+		},
+		{
+			Field:  "subredditName",
+			Reason: "subreddit name can not be empty",
+		},
 	}
 
 	ctrl := gomock.NewController(t)
 	repo := NewMockPostRepository(ctrl)
 	handler := NewHandler(repo)
 
-	_, err := handler.Handle(context.Background(), cmd)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "validation failed")
+	result, err := handler.Handle(context.Background(), cmd)
+	assert.Error(t, domain.ErrValidation, err)
+	assert.NotNil(t, result.Errors)
+	assert.Equal(t, ValidationErrorCode, result.Errors.Code)
+	assert.Equal(t, expectedErrors, result.Errors.Details)
 }

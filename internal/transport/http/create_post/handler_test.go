@@ -15,11 +15,14 @@ import (
 )
 
 func TestHappyHandler(t *testing.T) {
-	post := &domain.Post{
-		Author:        "John Doe",
-		Title:         "Aboba322",
-		Body:          "ya ochen lublu testi",
-		SubredditName: "https://pkg.go.dev/testing#B.Helper",
+	expectedResult := createPostCommand.Result{
+		Post: &domain.Post{
+			Author:        "John Doe",
+			Title:         "Aboba322",
+			Body:          "ya ochen lublu testi",
+			SubredditName: "https://pkg.go.dev/testing#B.Helper",
+		},
+		Errors: nil,
 	}
 
 	inputCommand := createPostCommand.Command{
@@ -30,10 +33,10 @@ func TestHappyHandler(t *testing.T) {
 	}
 
 	ctrl := gomock.NewController(t)
-	cmd := NewMockCreateCommand(ctrl)
+	cmd := NewMockCreatePostCommandHandler(ctrl)
 	handler := NewHandler(cmd)
 
-	cmd.EXPECT().Handle(gomock.Any(), inputCommand).Return(post, nil)
+	cmd.EXPECT().Handle(gomock.Any(), inputCommand).Return(expectedResult, nil)
 
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(Request{
@@ -51,12 +54,12 @@ func TestHappyHandler(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, rr.Code)
 
-	var resp domain.Post
+	var resp createPostCommand.Result
 
 	err = json.NewDecoder(rr.Body).Decode(&resp)
 
 	assert.NoError(t, err)
-	assert.Equal(t, *post, resp)
+	assert.Equal(t, expectedResult, resp)
 }
 
 func TestBadJSONHandler(t *testing.T) {
@@ -66,7 +69,7 @@ func TestBadJSONHandler(t *testing.T) {
 	}
 
 	ctrl := gomock.NewController(t)
-	cmd := NewMockCreateCommand(ctrl)
+	cmd := NewMockCreatePostCommandHandler(ctrl)
 	handler := NewHandler(cmd)
 
 	var buf bytes.Buffer

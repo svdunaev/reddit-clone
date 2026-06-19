@@ -12,47 +12,46 @@ package create_post
 import (
 	context "context"
 	create_post "reddit-clone/internal/application/command/create_post"
-	domain "reddit-clone/internal/domain/post"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockCreateCommand is a mock of CreateCommand interface.
-type MockCreateCommand struct {
+// MockCreatePostCommandHandler is a mock of CreatePostCommandHandler interface.
+type MockCreatePostCommandHandler struct {
 	ctrl     *gomock.Controller
-	recorder *MockCreateCommandMockRecorder
+	recorder *MockCreatePostCommandHandlerMockRecorder
 	isgomock struct{}
 }
 
-// MockCreateCommandMockRecorder is the mock recorder for MockCreateCommand.
-type MockCreateCommandMockRecorder struct {
-	mock *MockCreateCommand
+// MockCreatePostCommandHandlerMockRecorder is the mock recorder for MockCreatePostCommandHandler.
+type MockCreatePostCommandHandlerMockRecorder struct {
+	mock *MockCreatePostCommandHandler
 }
 
-// NewMockCreateCommand creates a new mock instance.
-func NewMockCreateCommand(ctrl *gomock.Controller) *MockCreateCommand {
-	mock := &MockCreateCommand{ctrl: ctrl}
-	mock.recorder = &MockCreateCommandMockRecorder{mock}
+// NewMockCreatePostCommandHandler creates a new mock instance.
+func NewMockCreatePostCommandHandler(ctrl *gomock.Controller) *MockCreatePostCommandHandler {
+	mock := &MockCreatePostCommandHandler{ctrl: ctrl}
+	mock.recorder = &MockCreatePostCommandHandlerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCreateCommand) EXPECT() *MockCreateCommandMockRecorder {
+func (m *MockCreatePostCommandHandler) EXPECT() *MockCreatePostCommandHandlerMockRecorder {
 	return m.recorder
 }
 
 // Handle mocks base method.
-func (m *MockCreateCommand) Handle(ctx context.Context, cmd create_post.Command) (*domain.Post, error) {
+func (m *MockCreatePostCommandHandler) Handle(ctx context.Context, cmd create_post.Command) (create_post.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Handle", ctx, cmd)
-	ret0, _ := ret[0].(*domain.Post)
+	ret0, _ := ret[0].(create_post.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Handle indicates an expected call of Handle.
-func (mr *MockCreateCommandMockRecorder) Handle(ctx, cmd any) *gomock.Call {
+func (mr *MockCreatePostCommandHandlerMockRecorder) Handle(ctx, cmd any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Handle", reflect.TypeOf((*MockCreateCommand)(nil).Handle), ctx, cmd)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Handle", reflect.TypeOf((*MockCreatePostCommandHandler)(nil).Handle), ctx, cmd)
 }
