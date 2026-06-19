@@ -8,7 +8,7 @@ import (
 	"reddit-clone/internal/application"
 	createPostCommand "reddit-clone/internal/application/command/create_post"
 	"reddit-clone/internal/logger"
-	"reddit-clone/internal/storage/inmem"
+	"reddit-clone/internal/repository/post"
 	server "reddit-clone/internal/transport/http"
 	createPostHTTP "reddit-clone/internal/transport/http/create_post"
 
@@ -18,13 +18,13 @@ import (
 
 type App struct {
 	log                      *slog.Logger
-	repo                     *inmem.Store
+	repo                     *post.Store
 	createPostHandlerHTTP    *createPostHTTP.Handler
 	createPostCommandHandler *createPostCommand.Handler
 }
 
 func NewApp(log *slog.Logger) *App {
-	repo := inmem.New(clock.RealClock{})
+	repo := post.NewInMem(clock.RealClock{})
 
 	createPostCommand := createPostCommand.NewHandler(repo)
 	createPostHTTP := createPostHTTP.NewHandler(createPostCommand)

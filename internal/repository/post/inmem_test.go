@@ -1,4 +1,4 @@
-package inmem
+package post
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func TestCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockClock.EXPECT().Now().Return(now).Times(2)
 
-			s := New(mockClock)
+			s := NewInMem(mockClock)
 			got, err := s.Create(ctx, tt.input)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -84,7 +84,7 @@ func TestList(t *testing.T) {
 	mockClock := mocks.NewMockClock(ctrl)
 	now := time.Now()
 	ctx := context.Background()
-	s := New(mockClock)
+	s := NewInMem(mockClock)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -125,7 +125,7 @@ func TestGetById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClock := mocks.NewMockClock(ctrl)
 	now := time.Now()
-	s := New(mockClock)
+	s := NewInMem(mockClock)
 	ctx := context.Background()
 
 	for _, tt := range tests {
@@ -185,7 +185,7 @@ func TestDelete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClock := mocks.NewMockClock(ctrl)
 	now := time.Now()
-	s := New(mockClock)
+	s := NewInMem(mockClock)
 	ctx := context.Background()
 
 	for _, tt := range tests {
@@ -288,7 +288,7 @@ func TestUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClock := mocks.NewMockClock(ctrl)
 	now := time.Now()
-	s := New(mockClock)
+	s := NewInMem(mockClock)
 	ctx := context.Background()
 
 	for _, tt := range tests {
@@ -325,7 +325,7 @@ func TestStore_Concurrent(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClock := mocks.NewMockClock(ctrl)
 	mockClock.EXPECT().Now().Return(time.Now()).AnyTimes()
-	s := New(mockClock)
+	s := NewInMem(mockClock)
 	goroutines := 10
 
 	var wg sync.WaitGroup

@@ -1,4 +1,4 @@
-package inmem
+package post
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type Store struct {
 	clock  clock.Clock
 }
 
-func New(clock clock.Clock) *Store {
+func NewInMem(clock clock.Clock) *Store {
 	return &Store{
 		posts: make(map[uuid.UUID]*domain.Post),
 		clock: clock,
