@@ -3,7 +3,6 @@ package respond
 import (
 	"encoding/json"
 	"net/http"
-	createPostCommand "reddit-clone/internal/application/command/create_post"
 	domain "reddit-clone/internal/domain/post"
 	"time"
 
@@ -31,30 +30,12 @@ type Response struct {
 	Errors Errors `json:"errors"`
 }
 
-func ToResponse(result createPostCommand.Result) Response {
-	var resp Response
-
-	if result.Post != nil {
-		resp.Post = Post{
-			Id:            result.Post.Id,
-			Author:        result.Post.Author,
-			Body:          result.Post.Body,
-			Title:         result.Post.Title,
-			SubredditName: result.Post.SubredditName,
-			Score:         result.Post.Score,
-			CreatedAt:     result.Post.CreatedAt,
-			UpdatedAt:     result.Post.UpdatedAt,
-		}
+func FromPost(p *domain.Post) Post {
+	return Post{
+		Id: p.Id, Author: p.Author, Title: p.Title, Body: p.Body,
+		SubredditName: p.SubredditName, Score: p.Score,
+		CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt,
 	}
-
-	if result.Errors != nil {
-		resp.Errors = Errors{
-			Code:    result.Errors.Code,
-			Details: result.Errors.Details,
-		}
-	}
-
-	return resp
 }
 
 func JSON(w http.ResponseWriter, status int, v any) {
@@ -65,4 +46,8 @@ func JSON(w http.ResponseWriter, status int, v any) {
 
 func Error(w http.ResponseWriter, status int, code, msg string) {
 	JSON(w, status, map[string]any{"error": map[string]any{"code": code, "message": msg}})
+}
+
+func ValidationFailed(w http.ResponseWriter, code string, details []domain.ValidationError) {
+	JSON(w, http.StatusBadRequest, map[string]any{"errors": map[string]any{"code": code, "details": details}})
 }

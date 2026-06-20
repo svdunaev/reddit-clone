@@ -47,15 +47,12 @@ func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 	result, err := h.cmd.Handle(r.Context(), cmd)
 	if err != nil {
 		if errors.Is(err, domain.ErrValidation) {
-			response := respond.ToResponse(result)
-			respond.JSON(w, http.StatusBadRequest, response)
+			respond.ValidationFailed(w, result.Errors.Code, result.Errors.Details)
 			return
 		}
 		respond.Error(w, http.StatusInternalServerError, "internal_error", err.Error())
 		return
 	}
 
-	response := respond.ToResponse(result)
-
-	respond.JSON(w, http.StatusCreated, response)
+	respond.JSON(w, http.StatusCreated, respond.FromPost(result.Post))
 }

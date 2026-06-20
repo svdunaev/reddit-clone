@@ -2,7 +2,6 @@ package httptransport
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"net/http"
 	"reddit-clone/internal/helpers/middlewares"
@@ -34,13 +33,6 @@ func New(logger *slog.Logger, createHandler *createPostHTTP.Handler) *Server {
 	s.routes(createHandler)
 
 	return s
-}
-
-func (s *Server) Start(addr string) {
-	err := http.ListenAndServe(addr, s.router)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func (s *Server) routes(createHandler *createPostHTTP.Handler) {

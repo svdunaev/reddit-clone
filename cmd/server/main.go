@@ -34,7 +34,7 @@ func NewApp(ctx context.Context) (*App, error) {
 
 	cfg, err := application.NewConfig()
 	if err != nil {
-		log.Fatal("invalid config")
+		return nil, fmt.Errorf("config %w", err)
 	}
 
 	logger := logger.New(cfg.Level)
