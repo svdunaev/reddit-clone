@@ -1,21 +1,29 @@
 package domain
 
 import (
-	"net/url"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type Post struct {
-	Id            uuid.UUID `json:"id,omitempty"`
-	Author        string    `json:"author"`
-	Title         string    `json:"title"`
-	SubredditName string    `json:"subreddit_name"`
-	Body          string    `json:"body"`
-	Score         int64     `json:"score,omitempty"`
-	CreatedAt     time.Time `json:"created_at,omitempty"`
-	UpdatedAt     time.Time `json:"updated_at,omitempty"`
+	Id            uuid.UUID
+	Author        string
+	Title         string
+	Body          string
+	SubredditName string
+	Score         int64
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+func NewPost(author, title, body, subredditName string) *Post {
+	return &Post{
+		Author:        author,
+		Title:         title,
+		Body:          body,
+		SubredditName: subredditName,
+	}
 }
 
 func (p *Post) Validate() ([]ValidationError, error) {
@@ -42,11 +50,10 @@ func (p *Post) Validate() ([]ValidationError, error) {
 		})
 	}
 
-	_, err := url.ParseRequestURI(p.SubredditName)
-	if err != nil {
+	if len(p.SubredditName) == 0 {
 		errors = append(errors, ValidationError{
 			Field:  "subredditName",
-			Reason: "subreddit name is not a valid URL",
+			Reason: "subreddit name can not be empty",
 		})
 	}
 

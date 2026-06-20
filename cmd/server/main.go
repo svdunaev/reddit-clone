@@ -5,28 +5,28 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"os"
+	"os/signal"
 	"reddit-clone/internal/application"
-	server "reddit-clone/internal/http"
+	createPostCommand "reddit-clone/internal/application/command/create_post"
 	"reddit-clone/internal/logger"
-	"reddit-clone/internal/storage/inmem"
+	"reddit-clone/internal/repository/post"
+	httptransport "reddit-clone/internal/transport/http"
+	createPostHTTP "reddit-clone/internal/transport/http/create_post"
+	"syscall"
 
 	"github.com/joho/godotenv"
 	"k8s.io/utils/clock"
 )
 
-type app struct {
-	log *slog.Logger
+type App struct {
+	log                      *slog.Logger
+	repo                     *post.Store
+	createPostHandlerHTTP    *createPostHTTP.Handler
+	createPostCommandHandler *createPostCommand.Handler
 }
 
-func NewApp(log *slog.Logger) *app {
-	return &app{log: log}
-}
-
-func (a *app) Run(_ context.Context) {
-	a.log.Info("Service running... ")
-}
-
-func main() {
+func NewApp(ctx context.Context) (*App, error) {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("No .env file, using system default values")
@@ -34,18 +34,38 @@ func main() {
 
 	cfg, err := application.NewConfig()
 	if err != nil {
-		log.Fatal("invalid config")
+		return nil, fmt.Errorf("config %w", err)
 	}
 
-	log := logger.New(cfg.Level)
+	logger := logger.New(cfg.Level)
 
-	app := NewApp(log)
+	repo := post.NewInMem(clock.RealClock{})
 
-	app.Run(context.Background())
+	createPostCommand := createPostCommand.NewHandler(repo)
+	createPostHTTP := createPostHTTP.NewHandler(createPostCommand)
 
-	repo := inmem.New(clock.RealClock{})
+	return &App{log: logger, repo: repo, createPostHandlerHTTP: createPostHTTP, createPostCommandHandler: createPostCommand}, nil
+}
 
-	srv := server.New(log, repo)
+func (a *App) Close() error { return nil }
 
-	srv.Start(cfg.HTTPAddr)
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	app, err := NewApp(ctx)
+	if err != nil {
+		return err
+	}
+	defer app.Close()
+
+	// хендлеры передаются из App в роутер
+	router := httptransport.New(app.log, app.createPostHandlerHTTP)
+	return router.Run(ctx, ":8080") // bind/start + graceful — внутри транспорта
 }

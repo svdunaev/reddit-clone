@@ -1,4 +1,4 @@
-package create
+package create_post
 
 import (
 	"context"
