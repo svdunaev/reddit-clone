@@ -7,9 +7,10 @@ import (
 	"net/http/httptest"
 	createPostCommand "reddit-clone/internal/application/command/create_post"
 	domain "reddit-clone/internal/domain/post"
-	"reddit-clone/internal/helpers/utils"
+	"reddit-clone/internal/transport/http/respond"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -20,7 +21,7 @@ func TestHappyHandler(t *testing.T) {
 			Author:        "John Doe",
 			Title:         "Aboba322",
 			Body:          "ya ochen lublu testi",
-			SubredditName: "https://pkg.go.dev/testing#B.Helper",
+			SubredditName: "https://pkg.go.dev/testing",
 		},
 		Errors: nil,
 	}
@@ -29,12 +30,14 @@ func TestHappyHandler(t *testing.T) {
 		Author:        "John Doe",
 		Title:         "Aboba322",
 		Body:          "ya ochen lublu testi",
-		SubredditName: "https://pkg.go.dev/testing#B.Helper",
+		SubredditName: "https://pkg.go.dev/testing",
 	}
 
 	ctrl := gomock.NewController(t)
 	cmd := NewMockCreatePostCommandHandler(ctrl)
 	handler := NewHandler(cmd)
+	router := chi.NewRouter()
+	router.Post("/api/posts", handler.HandleCreatePost)
 
 	cmd.EXPECT().Handle(gomock.Any(), inputCommand).Return(expectedResult, nil)
 
@@ -43,34 +46,32 @@ func TestHappyHandler(t *testing.T) {
 		Author:        "John Doe",
 		Title:         "Aboba322",
 		Body:          "ya ochen lublu testi",
-		SubredditName: "https://pkg.go.dev/testing#B.Helper",
+		SubredditName: "https://pkg.go.dev/testing",
 	})
 	req, err := http.NewRequest(http.MethodPost, "/api/posts", &buf)
 	assert.NoError(t, err)
 
 	rr := httptest.NewRecorder()
 
-	handler.HandleCreatePost(rr, req)
-
+	router.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusCreated, rr.Code)
 
-	var resp createPostCommand.Result
+	var resp respond.Post
 
 	err = json.NewDecoder(rr.Body).Decode(&resp)
 
 	assert.NoError(t, err)
-	assert.Equal(t, expectedResult, resp)
+	assert.Equal(t, respond.FromPost(expectedResult.Post), resp)
 }
 
 func TestBadJSONHandler(t *testing.T) {
 	body := `{"author":"john","title":"test"`
-	httpErr := utils.HttpError{
-		Code: "bad_request",
-	}
 
 	ctrl := gomock.NewController(t)
 	cmd := NewMockCreatePostCommandHandler(ctrl)
 	handler := NewHandler(cmd)
+	router := chi.NewRouter()
+	router.Post("/api/posts", handler.HandleCreatePost)
 
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(body)
@@ -78,12 +79,10 @@ func TestBadJSONHandler(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	handler.HandleCreatePost(rr, req)
-
+	router.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 
-	var resp utils.HttpError
+	var resp respond.HttpError
 	json.NewDecoder(rr.Body).Decode(&resp)
-
-	assert.Equal(t, httpErr.Code, resp.Code)
+	assert.Equal(t, "bad_request", resp.Error.Code)
 }

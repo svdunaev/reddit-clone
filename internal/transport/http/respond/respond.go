@@ -25,9 +25,8 @@ type Errors struct {
 	Details []domain.ValidationError `json:"details,omitempty"`
 }
 
-type Response struct {
-	Post   Post   `json:"post"`
-	Errors Errors `json:"errors"`
+type HttpError struct {
+	Error Errors `json:"error"`
 }
 
 func FromPost(p *domain.Post) Post {
