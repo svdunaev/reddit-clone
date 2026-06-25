@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"reddit-clone/internal/helpers/middlewares"
 	createPostHTTP "reddit-clone/internal/transport/http/create_post"
+	deletePostHttp "reddit-clone/internal/transport/http/delete_post"
+	getPostHttp "reddit-clone/internal/transport/http/get_post"
+	listPostsHttp "reddit-clone/internal/transport/http/list_posts"
+	updatePostHttp "reddit-clone/internal/transport/http/update_post"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -17,7 +21,14 @@ type Server struct {
 	logger *slog.Logger
 }
 
-func New(logger *slog.Logger, createHandler *createPostHTTP.Handler) *Server {
+func New(
+	logger *slog.Logger,
+	createHandler *createPostHTTP.Handler,
+	getPostHandler *getPostHttp.Handler,
+	listPostsHandler *listPostsHttp.Handler,
+	updatePostHandler *updatePostHttp.Handler,
+	deletePostHandler *deletePostHttp.Handler,
+) *Server {
 	r := chi.NewMux()
 
 	r.Use(middleware.RequestID)
@@ -30,20 +41,32 @@ func New(logger *slog.Logger, createHandler *createPostHTTP.Handler) *Server {
 	}
 
 	r.Use(s.LoggerMiddleware)
-	s.routes(createHandler)
+	s.routes(
+		createHandler,
+		getPostHandler,
+		listPostsHandler,
+		updatePostHandler,
+		deletePostHandler,
+	)
 
 	return s
 }
 
-func (s *Server) routes(createHandler *createPostHTTP.Handler) {
+func (s *Server) routes(
+	createHandler *createPostHTTP.Handler,
+	getPostHandler *getPostHttp.Handler,
+	listPostsHandler *listPostsHttp.Handler,
+	updatePostHandler *updatePostHttp.Handler,
+	deletePostHandler *deletePostHttp.Handler,
+) {
 	s.router.Route("/api/posts", func(r chi.Router) {
 		r.Post("/", createHandler.HandleCreatePost)
+		r.Get("/", listPostsHandler.HandleListPosts)
+		r.Get("/{id}", getPostHandler.HandleGetPost)
+		r.Put("/{id}", updatePostHandler.HandleUpdatePost)
+		r.Delete("/{id}", deletePostHandler.HandleDeletePost)
 	})
 	s.router.Get("/health", s.health)
-	// s.router.Get("/api/posts/{id}", getByIdHandler.NewHandler(s.repo).HandleGetPost)
-	// s.router.Get("/api/posts", getListHandler.NewHandler(s.repo).HandleGetList)
-	// s.router.Delete("/api/posts/{id}", deletePostHandler.NewHandler(s.repo).HandleDeletePost)
-	// s.router.Put("/api/posts/{id}", updatePostHandler.NewHandler(s.repo).HandleUpdatePost)
 }
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {

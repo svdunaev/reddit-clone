@@ -2,7 +2,6 @@ package post
 
 import (
 	"context"
-	"fmt"
 	"maps"
 	domain "reddit-clone/internal/domain/post"
 	"sync"
@@ -85,7 +84,7 @@ func (s *Store) Delete(ctx context.Context, id uuid.UUID) error {
 
 	_, ok := s.posts[id]
 	if !ok {
-		return fmt.Errorf("post with id %d does not exist", id)
+		return domain.ErrNotFound
 	}
 
 	delete(s.posts, id)
@@ -103,7 +102,7 @@ func (s *Store) Update(ctx context.Context, id uuid.UUID, input domain.Post) (do
 
 	_, ok := s.posts[id]
 	if !ok {
-		return domain.Post{}, fmt.Errorf("post with id %d does not exist", id)
+		return domain.Post{}, domain.ErrNotFound
 	}
 
 	input.Id = id
