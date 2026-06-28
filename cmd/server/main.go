@@ -28,18 +28,13 @@ import (
 )
 
 type App struct {
-	log                      *slog.Logger
-	repo                     *post.Store
-	createPostHandlerHTTP    *createPostHTTP.Handler
-	createPostCommandHandler *createPostCommand.Handler
-	getPostHandlerHttp       *getPostHttp.Handler
-	getPostQueryHandler      *getPostQuery.Handler
-	listPostsHandlerHttp     *listPostsHttp.Handler
-	listPostsQueryHandler    *listPostsQuery.Handler
-	updatePostHandlerHttp    *updatePostHttp.Handler
-	updatePostCommandHandler *updatePostCommand.Handler
-	deletePostHandlerHttp    *deletePostHttp.Handler
-	deletePostCommandHandler *deletePostCommand.Handler
+	log                   *slog.Logger
+	repo                  *post.Store
+	createPostHandlerHTTP *createPostHTTP.Handler
+	getPostHandlerHttp    *getPostHttp.Handler
+	listPostsHandlerHttp  *listPostsHttp.Handler
+	updatePostHandlerHttp *updatePostHttp.Handler
+	deletePostHandlerHttp *deletePostHttp.Handler
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -73,18 +68,13 @@ func NewApp(ctx context.Context) (*App, error) {
 	deletePostHttp := deletePostHttp.NewHandler(deletePostCommand)
 
 	return &App{
-		log:                      logger,
-		repo:                     repo,
-		createPostHandlerHTTP:    createPostHTTP,
-		createPostCommandHandler: createPostCommand,
-		getPostHandlerHttp:       getPostHttp,
-		getPostQueryHandler:      getPostQuery,
-		listPostsHandlerHttp:     listPostsHttp,
-		listPostsQueryHandler:    listPostsQuery,
-		updatePostHandlerHttp:    updatePostHttp,
-		updatePostCommandHandler: updatePostCommand,
-		deletePostHandlerHttp:    deletePostHttp,
-		deletePostCommandHandler: deletePostCommand,
+		log:                   logger,
+		repo:                  repo,
+		createPostHandlerHTTP: createPostHTTP,
+		getPostHandlerHttp:    getPostHttp,
+		listPostsHandlerHttp:  listPostsHttp,
+		updatePostHandlerHttp: updatePostHttp,
+		deletePostHandlerHttp: deletePostHttp,
 	}, nil
 }
 

@@ -28,11 +28,10 @@ func TestHappyHandler(t *testing.T) {
 	}
 
 	cmd := Command{
-		Id:            post.Id,
-		Author:        "Bill Russel",
-		Title:         "Celtics",
-		Body:          "Actual GOAT",
-		SubredditName: "https://pkg.go.dev/testing#B.Helper",
+		Id:     post.Id,
+		Author: "Bill Russel",
+		Title:  "Celtics",
+		Body:   "Actual GOAT",
 	}
 
 	ctrl := gomock.NewController(t)

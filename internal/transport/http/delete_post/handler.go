@@ -39,7 +39,8 @@ func (h *Handler) HandleDeletePost(w http.ResponseWriter, r *http.Request) {
 			respond.Error(w, http.StatusNotFound, NotFoundErrorCode, err.Error())
 			return
 		}
-		respond.Error(w, http.StatusInternalServerError, "internal_error", err.Error())
+		respond.Error(w, http.StatusInternalServerError, "internal_error", "something went wrong")
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)

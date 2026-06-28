@@ -26,7 +26,7 @@ func TestHappy(t *testing.T) {
 	}
 
 	expectedResult := listPostsQuery.Result{
-		Posts: &posts,
+		Posts: posts,
 		Error: nil,
 	}
 

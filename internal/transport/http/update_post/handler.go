@@ -47,20 +47,23 @@ func (h *Handler) HandleUpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cmd := update_post.Command{
-		Id:            id,
-		Author:        payload.Author,
-		Title:         payload.Title,
-		Body:          payload.Body,
-		SubredditName: payload.SubredditName,
+		Id:     id,
+		Author: payload.Author,
+		Title:  payload.Title,
+		Body:   payload.Body,
 	}
 
 	result, err := h.cmd.Handle(r.Context(), cmd)
 	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			respond.Error(w, http.StatusNotFound, NotFoundErrorCode, err.Error())
+			return
+		}
 		if errors.Is(err, domain.ErrValidation) {
 			respond.ValidationFailed(w, result.Errors.Code, result.Errors.Details)
 			return
 		}
-		respond.Error(w, http.StatusInternalServerError, "internall_error", err.Error())
+		respond.Error(w, http.StatusInternalServerError, "internal_error", "something went wrong")
 		return
 	}
 

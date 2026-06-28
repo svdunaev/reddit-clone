@@ -14,7 +14,7 @@ type ErrorDetails struct {
 }
 
 type Result struct {
-	Posts *[]domain.Post
+	Posts []domain.Post
 	Error *ErrorDetails
 }
 
@@ -35,7 +35,7 @@ func (h *Handler) Handle(ctx context.Context) (Result, error) {
 	}
 
 	return Result{
-		Posts: &res,
+		Posts: res,
 		Error: nil,
 	}, nil
 }

@@ -50,7 +50,7 @@ func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 			respond.ValidationFailed(w, result.Errors.Code, result.Errors.Details)
 			return
 		}
-		respond.Error(w, http.StatusInternalServerError, "internal_error", err.Error())
+		respond.Error(w, http.StatusInternalServerError, "internal_error", "something went wrong")
 		return
 	}
 

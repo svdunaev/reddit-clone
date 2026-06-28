@@ -19,20 +19,18 @@ import (
 func TestHappy(t *testing.T) {
 	id := uuid.New()
 	inputCommand := update_post.Command{
-		Id:            id,
-		Author:        "Magic Johnson",
-		Title:         "Not a Goat",
-		Body:          "Lalala lalala lalala",
-		SubredditName: "https://pkg.go.dev/testing",
+		Id:     id,
+		Author: "Magic Johnson",
+		Title:  "Not a Goat",
+		Body:   "Lalala lalala lalala",
 	}
 
 	expectedOutput := update_post.Result{
 		Post: &domain.Post{
-			Id:            inputCommand.Id,
-			Author:        "Magic Johnson",
-			Title:         "Not a Goat",
-			Body:          "Lalala lalala lalala",
-			SubredditName: "https://pkg.go.dev/testing",
+			Id:     inputCommand.Id,
+			Author: "Magic Johnson",
+			Title:  "Not a Goat",
+			Body:   "Lalala lalala lalala",
 		},
 		Errors: nil,
 	}

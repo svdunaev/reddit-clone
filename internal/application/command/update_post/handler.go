@@ -9,11 +9,10 @@ import (
 )
 
 type Command struct {
-	Id            uuid.UUID
-	Title         string
-	Body          string
-	Author        string
-	SubredditName string
+	Id     uuid.UUID
+	Title  string
+	Body   string
+	Author string
 }
 
 type ErrorDetails struct {
