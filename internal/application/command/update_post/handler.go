@@ -47,6 +47,11 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 				},
 			}, err
 		}
+
+		return Result{
+			Post:   nil,
+			Errors: nil,
+		}, err
 	}
 
 	post.Author = cmd.Author
