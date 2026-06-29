@@ -1,13 +1,20 @@
-package create_post
+package update_post
 
 import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"reddit-clone/internal/application/command/create_post"
+	"reddit-clone/internal/application/command/update_post"
 	domain "reddit-clone/internal/domain/post"
 	"reddit-clone/internal/transport/http/respond"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
+
+type Handler struct {
+	cmd UpdatePostCommandHandler
+}
 
 type Request struct {
 	Author        string `json:"author"`
@@ -16,36 +23,42 @@ type Request struct {
 	SubredditName string `json:"subreddit_name"`
 }
 
-type Handler struct {
-	cmd CreatePostCommandHandler
-}
-
-func NewHandler(cmd CreatePostCommandHandler) *Handler {
+func NewHandler(cmd UpdatePostCommandHandler) *Handler {
 	return &Handler{
 		cmd: cmd,
 	}
 }
 
-func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleUpdatePost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var payload Request
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		respond.Error(w, http.StatusBadRequest, IncorrectIdErrorCode, "invalid id: "+err.Error())
+		return
+	}
 
+	var payload Request
 	if err := decoder.Decode(&payload); err != nil {
 		respond.Error(w, http.StatusBadRequest, "bad_request", "invalid JSON "+err.Error())
 		return
 	}
 
-	cmd := create_post.Command{
-		Author:        payload.Author,
-		Title:         payload.Title,
-		Body:          payload.Body,
-		SubredditName: payload.SubredditName,
+	cmd := update_post.Command{
+		Id:     id,
+		Author: payload.Author,
+		Title:  payload.Title,
+		Body:   payload.Body,
 	}
 
 	result, err := h.cmd.Handle(r.Context(), cmd)
 	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			respond.Error(w, http.StatusNotFound, NotFoundErrorCode, err.Error())
+			return
+		}
 		if errors.Is(err, domain.ErrValidation) {
 			respond.ValidationFailed(w, result.Errors.Code, result.Errors.Details)
 			return
@@ -54,5 +67,5 @@ func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respond.JSON(w, http.StatusCreated, respond.FromPost(result.Post))
+	respond.JSON(w, http.StatusOK, respond.FromPost(result.Post))
 }
